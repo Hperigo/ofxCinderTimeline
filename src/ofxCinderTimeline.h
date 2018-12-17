@@ -8,3 +8,4 @@ namespace ofxCinderTimeline {
 using namespace cinder;
 
 }
+namespace tl = ofxCinderTimeline;

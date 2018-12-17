@@ -23,7 +23,7 @@
 */
 
 #include "cinder/Timeline.h"
-
+#include <iostream>
 #include <vector>
 
 using namespace std;
@@ -68,8 +68,11 @@ void Timeline::stepTo( float absoluteTime )
 	s_iter endItem = mItems.end();
 	for( s_iter iter = mItems.begin(); iter != endItem; ++iter ) {
 		iter->second->stepTo( mCurrentTime, reverse );
-		if( iter->second->isComplete() && iter->second->getAutoRemove() )
-			iter->second->mMarkedForRemoval = true;
+        if( iter->second->isComplete() && iter->second->getAutoRemove() ){
+            cout << "......" << std::endl;
+            iter->second->mMarkedForRemoval = true;
+        }
+			
 	}
 	
 	eraseMarked();	
@@ -266,8 +269,9 @@ void Timeline::replaceTarget( void *target, void *replacementTarget )
 
 void Timeline::reset( bool unsetStarted )
 {
+    
 	TimelineItem::reset( unsetStarted );
-	
+    
 	for( s_iter iter = mItems.begin(); iter != mItems.end(); ++iter )
 		iter->second->reset( unsetStarted );
 }
@@ -321,6 +325,7 @@ void Cue::loopStart()
 {
 	if( mFunction )
 		mFunction();
+    mHasStarted = false;
 }
 
 TimelineItemRef Cue::clone() const

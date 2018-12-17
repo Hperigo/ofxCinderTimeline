@@ -74,10 +74,11 @@ class TimelineItem : public std::enable_shared_from_this<TimelineItem>
 	//! Removes the item from its parent Timeline
 	void removeSelf();
 	//! Marks the item as not completed, and if \a unsetStarted, marks the item as not started
-	virtual void reset( bool unsetStarted = false ) { if( unsetStarted ) mHasStarted = false; mComplete = false; }
+    virtual void reset( bool unsetStarted = false ) { if( unsetStarted ){ mHasStarted = false; mMarkedForRemoval = false; } mComplete = false;  }
 	
 	//! Returns whether the item has started
-	bool hasStarted() const { return mHasStarted; }			
+	bool hasStarted() const { return mHasStarted; }
+    void setHasStarted( bool v ) { mHasStarted = v; }
 	//! Returns whether the item has completed
 	bool isComplete() { return mComplete; }
 	
