@@ -34,6 +34,9 @@
 #include <list>
 #include <map>
 
+#include <iostream>
+using namespace std;
+
 namespace cinder {
 
 typedef std::shared_ptr<class Cue>			CueRef;
@@ -186,16 +189,17 @@ class Timeline : public TimelineItem {
 	//! \cond
 	virtual void	stepTo( float absoluteTime, bool reverse ) { stepTo( absoluteTime ); }
 	//! \endcond
-	
-  protected:  
+    
+    
+    virtual void update( float absTime );
+  protected:
   	Timeline();
-	
+
 	virtual void reverse();
 	virtual TimelineItemRef cloneReverse() const;
 	virtual TimelineItemRef clone() const;
 	virtual void start( bool reverse ) {} // no-op
 	virtual void loopStart();
-	virtual void update( float absTime );
 	virtual void complete( bool reverse ) {} // no-op
 
 	void						eraseMarked();
@@ -210,6 +214,52 @@ class Timeline : public TimelineItem {
 	Timeline( const Timeline &rhs ); // private to prevent copying; use clone() method instead
 	Timeline& operator=( const Timeline &rhs ); // not defined to prevent copying
 };
+    
+    static TimelineRef timeline(){
+        static TimelineRef result;
+        if( !result )
+            result = Timeline::create();
+        
+        return result;
+    }
+    
+    typedef std::shared_ptr<class Sequence> SequenceRef;
+    class Sequence : public Timeline {
+    public:
+        
+        static SequenceRef create() {
+            SequenceRef result( new Sequence );
+            result->setDefaultAutoRemove( false );
+            result->setInfinite(false);
+            
+            return result;
+        }
+
+        void play( TimelineRef parent = nullptr ) {
+            
+            removeSelf();
+            reset(true);
+
+            if( parent ){
+                parent->insert( shared_from_this(), parent->getCurrentTime() );
+            }else{
+                timeline()->insert( shared_from_this(), timeline()->getCurrentTime() );
+            }
+
+        }
+        
+        
+        void stop() {
+            
+            removeSelf();
+//            reset(true);
+            stepTo(0.0f);
+            
+        };
+        
+        
+        Anim<float> playbackController;
+    };
 
 class Cue : public TimelineItem {
   public:
@@ -234,4 +284,5 @@ class Cue : public TimelineItem {
 	std::function<void ()>		mFunction;
 };
 
+    
 } // namespace cinder

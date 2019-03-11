@@ -69,7 +69,6 @@ void Timeline::stepTo( float absoluteTime )
 	for( s_iter iter = mItems.begin(); iter != endItem; ++iter ) {
 		iter->second->stepTo( mCurrentTime, reverse );
         if( iter->second->isComplete() && iter->second->getAutoRemove() ){
-            cout << "......" << std::endl;
             iter->second->mMarkedForRemoval = true;
         }
 			
@@ -325,7 +324,7 @@ void Cue::loopStart()
 {
 	if( mFunction )
 		mFunction();
-    mHasStarted = false;
+    mHasStarted = true;
 }
 
 TimelineItemRef Cue::clone() const
