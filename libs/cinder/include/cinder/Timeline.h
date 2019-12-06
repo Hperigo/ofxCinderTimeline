@@ -192,6 +192,9 @@ class Timeline : public TimelineItem {
     
     
     virtual void update( float absTime );
+    
+    virtual float                calcDuration() const;
+
   protected:
   	Timeline();
 
@@ -203,7 +206,6 @@ class Timeline : public TimelineItem {
 	virtual void complete( bool reverse ) {} // no-op
 
 	void						eraseMarked();
-	virtual float				calcDuration() const;
 
 	bool						mDefaultAutoRemove;
 	float						mCurrentTime;
