@@ -25,6 +25,7 @@
 #pragma once
 
 #include "cinder/Cinder.h"
+#include "Tracer.h"
 
 namespace cinder
 {
@@ -104,6 +105,7 @@ class TimelineItem : public std::enable_shared_from_this<TimelineItem>
 	
 	TimelineItemRef thisRef() { return shared_from_this(); }
 	
+    
   protected:
 	void	setDurationDirty() { mDirtyDuration = true; }
 	void	updateDuration() const;
@@ -125,10 +127,17 @@ class TimelineItem : public std::enable_shared_from_this<TimelineItem>
 	int32_t	mLastLoopIteration;
 	
 	friend class Timeline;
+
+    
+protected:
+    TimelineItemType mType = eTimelineItem;
+    uint32_t mId;
+    
   private:
 	mutable float	mDuration, mInvDuration;
 	mutable bool	mDirtyDuration; // marked if the virtual calcDuration() needs to be calculated
-};
 
+};
+    
 } // namespace cinder
 

@@ -39,14 +39,24 @@ Timeline::Timeline()
 	: TimelineItem( 0, 0, 0, 0 ), mDefaultAutoRemove( true ), mCurrentTime( 0 )
 {
 	mUseAbsoluteTime = true;
+    mType = TimelineItemType::eTimeline;
+    
+    TracerSession::get()->tween_start( mId, mType);
 }
 
 Timeline::Timeline( const Timeline &rhs )
 	: TimelineItem( rhs ), mDefaultAutoRemove( rhs.mDefaultAutoRemove ), mCurrentTime( rhs.mCurrentTime )
 {
+    mType = TimelineItemType::eTimeline;
+    TracerSession::get()->tween_start( mId, mType);
+    
 	for( s_const_iter iter = rhs.mItems.begin(); iter != rhs.mItems.end(); ++iter ) {
 		mItems.insert( make_pair( iter->first, iter->second->clone() ) );
 	}
+}
+    
+Timeline::~Timeline(){
+
 }
 
 void Timeline::step( float timestep )

@@ -97,12 +97,18 @@ class TweenBase : public TimelineItem {
 		TimelineItem::reset( unsetStarted );
 	}
 
+    virtual void start( bool reverse )
+    {
+
+    }
+    
 	virtual void complete( bool reverse )
 	{
 		if( reverse && mReverseFinishFunction )
 			mReverseFinishFunction();
-		else if( ( ! reverse ) && mFinishFunction )
+        else if( ( ! reverse ) && mFinishFunction ){ //@note hperigo
 			mFinishFunction();
+        }
 	}
 
   
@@ -215,14 +221,21 @@ class Tween : public TweenBase {
 		return result;
 	}
 	
+    virtual void complete( bool reverse ){
+        TweenBase::complete(reverse);
+    }
+    
 	virtual void start( bool reverse )
 	{
-		if( mCopyStartValue )
+        TweenBase::start(reverse);
+        
+        if( mCopyStartValue )
 			mStartValue = *(reinterpret_cast<T*>( mTarget ) );
 		if( reverse && mReverseStartFunction )
 			mReverseStartFunction();
-		else if( ( ! reverse ) && mStartFunction )
+        else if( ( ! reverse ) && mStartFunction ){ //@NOTE: hperigo
 			mStartFunction();
+        }
 	}
 	
 	virtual void update( float relativeTime )

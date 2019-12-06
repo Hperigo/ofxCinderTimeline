@@ -27,12 +27,16 @@
 #include "cinder/CinderMath.h"
 	
 namespace cinder {
+    
 
 TimelineItem::TimelineItem( class Timeline *parent )
 	: mParent( parent ), mTarget( 0 ), mStartTime( 0 ), mDirtyDuration( false ), mDuration( 0 ), mInvDuration( 0 ), mHasStarted( false ), mHasReverseStarted( false ),
 		mComplete( false ), mReverseComplete( false ), mMarkedForRemoval( false ), mAutoRemove( true ),
 		mInfinite( false ), mLoop( false ), mPingPong( false ), mLastLoopIteration( -1 ), mUseAbsoluteTime( false )
 {
+//    mId = mTweenGlobalId;
+//    mTweenGlobalId++;
+    mId = TracerSession::get()->getNewId();
 }
 
 TimelineItem::TimelineItem( Timeline *parent, void *target, float startTime, float duration )
@@ -40,6 +44,10 @@ TimelineItem::TimelineItem( Timeline *parent, void *target, float startTime, flo
 		mHasStarted( false ), mHasReverseStarted( false ), mComplete( false ), mReverseComplete( false ), mMarkedForRemoval( false ), mAutoRemove( true ),
 		mInfinite( false ), mLoop( false ), mPingPong( false ), mLastLoopIteration( -1 ), mUseAbsoluteTime( false )
 {
+//    mId = mTweenGlobalId;
+//    mTweenGlobalId++;
+    
+    mId = TracerSession::get()->getNewId();
 }
 
 void TimelineItem::removeSelf()
@@ -49,74 +57,89 @@ void TimelineItem::removeSelf()
 
 void TimelineItem::stepTo( float newTime, bool reverse )
 {
-	if( mMarkedForRemoval )
-		return;
-	
-	const float absTime = newTime - mStartTime;
-	const float endTime = mStartTime + mDuration;
+    if( mMarkedForRemoval )
+        return;
+    
+    updateDuration();
 
-	updateDuration();
-
-	if( ( ! mHasReverseStarted ) && reverse && ( newTime < mStartTime ) ) {
-		mHasReverseStarted = true;
-		mHasStarted = false;
-		start( true );
-	}	
-	else if( newTime >= mStartTime ) {
-		float relTime;
-		if( mPingPong ) {
-			relTime = math<float>::fmod( absTime * mInvDuration, 2 ); // varies from 0-2
-			if( relTime > 1 )
-				relTime = ( 2 - relTime );
-		}
-		else if( mLoop ) {
-			relTime = math<float>::fmod( absTime * mInvDuration, 1 );
-		}
-		else
-			relTime = math<float>::min( absTime * mInvDuration, 1 );
-		
-		if( ( ! mHasStarted ) && ( ! reverse ) ) {
-			mHasStarted = true;
-			mHasReverseStarted = false;
-			mLastLoopIteration = 0;
-			loopStart();
-			start( false );
-		}
-		
-		float time = ( mUseAbsoluteTime ) ? absTime : relTime;
-
-		// accommodate a tween with a duration <= 0
-		if( ( ! mUseAbsoluteTime ) && ( mInvDuration <= 0 ) )
-			time = 1.0f;
-
-		if( mLoop || mPingPong ) {
-			int32_t loopIteration = static_cast<int32_t>( ( newTime - mStartTime ) * mInvDuration );
-			if( loopIteration != mLastLoopIteration ) {
-				mLastLoopIteration = loopIteration;
-				loopStart();
-				update( time );
-			}
-			else
-				update( time );
-		}
-		else
-			update( time );
-	}
-
-	if( newTime < endTime ) {
-		if( ( ! mReverseComplete ) && reverse ) {
-			mReverseComplete = true;
-			mComplete = false;
-			complete( true );
-		}
-	}
-	else if( ( ! mLoop ) && ( ! mInfinite ) ) { // newTime >= endTime
-		if( ( ! mComplete ) && ( ! reverse ) ) {
-			mComplete = true;
-			mReverseComplete = false;
-			complete( false );
-		}
-	}
+    const float absTime = newTime - mStartTime;
+    const float endTime = mStartTime + mDuration;
+    
+    if( ( ! mHasReverseStarted ) && reverse && ( newTime < mStartTime ) ) {
+        // first update the current time to be the start time
+        update( ( mUseAbsoluteTime ) ? mStartTime : 0 );
+        // then issue reverse start
+        mHasReverseStarted = true;
+        mHasStarted = false;
+        
+        std::cout << "1 start: " << mId << std::endl;
+        TracerSession::get()->tween_start( mId, mType);
+        start( true );
+    }
+    else if( newTime >= mStartTime ) {
+        float relTime;
+        if( mPingPong ) {
+            relTime = math<float>::fmod( absTime * mInvDuration, 2 ); // varies from 0-2
+            if( relTime > 1 )
+                relTime = ( 2 - relTime );
+        }
+        else if( mLoop ) {
+            relTime = math<float>::fmod( absTime * mInvDuration, 1 );
+        }
+        else
+            relTime = math<float>::min( absTime * mInvDuration, 1 );
+        
+        if( ( ! mHasStarted ) && ( ! reverse ) ) {
+            mHasStarted = true;
+            mHasReverseStarted = false;
+            mLastLoopIteration = 0;
+            loopStart();
+            
+            std::cout << "2 start: " << mId << std::endl;
+            TracerSession::get()->tween_start(  mId, mType);
+            start( false );
+        }
+        
+        float time = ( mUseAbsoluteTime ) ? absTime : relTime;
+        
+        // accommodate a tween with a duration <= 0
+        if( ( ! mUseAbsoluteTime ) && ( mInvDuration <= 0 ) )
+            time = 1.0f;
+        
+        if( mLoop || mPingPong ) {
+            int32_t loopIteration = static_cast<int32_t>( ( newTime - mStartTime ) * mInvDuration );
+            if( loopIteration != mLastLoopIteration ) {
+                mLastLoopIteration = loopIteration;
+                loopStart();
+                update( time );
+            }
+            else
+                update( time );
+        }
+        else
+            update( time );
+    }
+    
+    if( newTime < endTime ) {
+        if( ( ! mReverseComplete ) && reverse ) {
+            mReverseComplete = true;
+            mComplete = false;
+            
+            std::cout << "1 end: " <<  mId << std::endl;
+            TracerSession::get()->tween_end(  mId  );
+            complete( true );
+        }
+    }
+    else if( ( ! mLoop ) && ( ! mInfinite ) ) { // newTime >= endTime
+        if( ( ! mComplete ) && ( ! reverse ) ) {
+            mComplete = true;
+            mReverseComplete = false;
+            
+            std::cout << "1 end: " <<  mId << std::endl;
+            TracerSession::get()->tween_end(  mId );
+            complete( false );
+        }
+    }
 }
 
 void TimelineItem::setStartTime( float time )

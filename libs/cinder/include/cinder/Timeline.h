@@ -46,7 +46,9 @@ class Timeline : public TimelineItem {
   public:
 	//! Creates a new timeline, defaulted to infinite
 	static TimelineRef	create() { TimelineRef result( new Timeline() ); result->setInfinite( true ); return result; }
-
+    
+    
+    ~Timeline();
 	//! Advances time a specified amount and evaluates items
 	void	step( float timestep );
 	//! Goes to a specific time and evaluates items.
@@ -224,44 +226,6 @@ class Timeline : public TimelineItem {
         
         return result;
     }
-    
-    typedef std::shared_ptr<class Sequence> SequenceRef;
-    class Sequence : public Timeline {
-    public:
-        
-        static SequenceRef create() {
-            SequenceRef result( new Sequence );
-            result->setDefaultAutoRemove( false );
-            result->setInfinite(false);
-            
-            return result;
-        }
-
-        void play( TimelineRef parent = nullptr ) {
-            
-            removeSelf();
-            reset(true);
-
-            if( parent ){
-                parent->insert( shared_from_this(), parent->getCurrentTime() );
-            }else{
-                timeline()->insert( shared_from_this(), timeline()->getCurrentTime() );
-            }
-
-        }
-        
-        
-        void stop() {
-            
-            removeSelf();
-//            reset(true);
-            stepTo(0.0f);
-            
-        };
-        
-        
-        Anim<float> playbackController;
-    };
 
 class Cue : public TimelineItem {
   public:
